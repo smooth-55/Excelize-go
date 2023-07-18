@@ -4,6 +4,7 @@ import "go.uber.org/fx"
 
 // Module exports services present
 var Module = fx.Options(
+	fx.Provide(NewTodoService),
 	fx.Provide(NewFirebaseService),
 	fx.Provide(NewStorageBucketService),
 	fx.Provide(NewUserService),
