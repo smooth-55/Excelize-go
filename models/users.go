@@ -10,9 +10,10 @@ type User struct {
 	Base
 	Email    string `gorm:"email" json:"email" validate:"required,email"`
 	FullName string `gorm:"full_name" json:"full_name" validate:"required"`
-	Phone    string `gorm:"phone" json:"phone"  validate:"required,phone"`
-	Gender   string `gorm:"gender" json:"gender" validate:"required,gender"`
+	Phone    string `gorm:"phone" json:"phone" validate:"required,phone"`
+	Gender   string `gorm:"gender" json:"gender"`
 	Password string `gorm:"password" json:"password" validate:"required"`
+	Username string `gorm:"username" json:"username" validate:"required"`
 }
 
 // TableName gives table name of model
@@ -23,9 +24,11 @@ func (u *User) TableName() string {
 // ToMap convert User to map
 func (u *User) ToMap() map[string]interface{} {
 	return map[string]interface{}{
+		"id":        u.ID,
 		"email":     u.Email,
 		"full_name": u.FullName,
 		"phone":     u.Phone,
+		"username":  u.Username,
 		"gender":    u.Gender,
 	}
 }
