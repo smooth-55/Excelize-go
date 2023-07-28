@@ -10,5 +10,4 @@ CREATE TABLE IF NOT EXISTS `users` (
   `deleted_at` DATETIME NULL,
   PRIMARY KEY (id),
   CONSTRAINT `UQ_user_email` UNIQUE (`email`),
-  CONSTRAINT `UQ_user_phone` UNIQUE (`phone`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
