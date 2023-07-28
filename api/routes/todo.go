@@ -37,7 +37,6 @@ func (c TodoRoutes) Setup() {
 		todo.POST("", c.todoController.CreateTodo)
 		todo.GET("", c.todoController.GetAllTodo)
 		todo.GET("/:id", c.todoController.GetOneTodo)
-		todo.GET("/export", c.todoController.ExportExcel)
 
 	}
 }
