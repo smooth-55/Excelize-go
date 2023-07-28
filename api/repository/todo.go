@@ -3,6 +3,8 @@ package repository
 import (
 	"boilerplate-api/infrastructure"
 	"boilerplate-api/models"
+
+	"gorm.io/gorm"
 )
 
 // TodoRepository database structure
@@ -19,10 +21,27 @@ func NewTodoRepository(db infrastructure.Database, logger infrastructure.Logger)
 	}
 }
 
+// WithTrx enables repository with transaction
+func (c TodoRepository) WithTrx(trxHandle *gorm.DB) TodoRepository {
+	if trxHandle == nil {
+		c.logger.Zap.Error("Transaction Database not found in gin context. ")
+		return c
+	}
+	c.db.DB = trxHandle
+	return c
+}
+
 // Create Todo
 func (c TodoRepository) Create(Todo models.Todo) (models.Todo, error) {
 	return Todo, c.db.DB.Create(&Todo).Error
 }
+
+// Create Todo
+func (c TodoRepository) BulkCreateTodo(Todo []*models.Todo) error {
+	return c.db.DB.Create(&Todo).Error
+}
+
+// Create Todo
 
 // GetAllTodo Get All todos
 func (c TodoRepository) GetAllTodo() ([]models.Todo, int64, error) {
