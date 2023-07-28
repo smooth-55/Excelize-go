@@ -67,28 +67,21 @@ func (cc UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	if reqData.Password != reqData.ConfirmPassword {
-		cc.logger.Zap.Error("Password and confirm password not matching : ")
-		err := errors.BadRequest.New("Password and confirm password should be same.")
-		responses.HandleError(c, err)
-		return
-	}
-
-	if _, err := cc.userService.GetOneUserWithEmail(reqData.Email); err != nil {
+	if _, err := cc.userService.GetOneUserWithEmail(reqData.Email); err == nil {
 		cc.logger.Zap.Error("Error [CreateUser] [db CreateUser]: User with this email already exists")
 		err := errors.BadRequest.New("User with this email already exists")
 		responses.HandleError(c, err)
 		return
 	}
 
-	if _, err := cc.userService.GetOneUserWithPhone(reqData.Phone); err != nil {
-		cc.logger.Zap.Error("Error [db GetOneUserWithPhone]: User with this phone already exists")
-		err := errors.BadRequest.New("User with this phone already exists")
+	if _, err := cc.userService.GetOneUserWithUsername(reqData.Username); err == nil {
+		cc.logger.Zap.Error("Error [CreateUser] [db CreateUser]: User with this username already exists")
+		err := errors.BadRequest.New("User with this username already exists")
 		responses.HandleError(c, err)
 		return
 	}
-
-	if err := cc.userService.WithTrx(trx).CreateUser(reqData.User); err != nil {
+	user := reqData.GetUserObj()
+	if err := cc.userService.WithTrx(trx).CreateUser(user); err != nil {
 		cc.logger.Zap.Error("Error [CreateUser] [db CreateUser]: ", err.Error())
 		err := errors.InternalError.Wrap(err, "Failed to create user")
 		responses.HandleError(c, err)
