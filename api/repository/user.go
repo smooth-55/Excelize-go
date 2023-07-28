@@ -5,6 +5,7 @@ import (
 	"boilerplate-api/infrastructure"
 	"boilerplate-api/models"
 	"boilerplate-api/paginations"
+
 	"gorm.io/gorm"
 )
 
@@ -36,9 +37,12 @@ func (c UserRepository) WithTrx(trxHandle *gorm.DB) UserRepository {
 func (c UserRepository) Create(User models.User) error {
 	return c.db.DB.Create(&User).Error
 }
+func (c UserRepository) BulkCreateUser(User []*models.User) error {
+	return c.db.DB.Create(&User).Error
+}
 
 // GetAllUsers Get All users
-func (c UserRepository) GetAllUsers(pagination paginations.UserPagination) (users []dtos.GetUserResponse, count int64, err error) {
+func (c UserRepository) GetAllUsers(pagination paginations.UserPagination) (users []models.User, count int64, err error) {
 	queryBuilder := c.db.DB.Limit(pagination.PageSize).Offset(pagination.Offset).Order("created_at desc")
 	queryBuilder = queryBuilder.Model(&models.User{})
 
@@ -66,6 +70,13 @@ func (c UserRepository) GetOneUser(Id string) (userModel dtos.GetUserResponse, e
 func (c UserRepository) GetOneUserWithEmail(Email string) (user models.User, err error) {
 	return user, c.db.DB.Model(&user).
 		Where("email = ?", Email).
+		First(&user).
+		Error
+}
+
+func (c UserRepository) GetOneUserWithUsername(username string) (user models.User, err error) {
+	return user, c.db.DB.Model(&user).
+		Where("username = ?", username).
 		First(&user).
 		Error
 }
