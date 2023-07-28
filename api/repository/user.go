@@ -5,6 +5,7 @@ import (
 	"boilerplate-api/infrastructure"
 	"boilerplate-api/models"
 	"boilerplate-api/paginations"
+
 	"gorm.io/gorm"
 )
 
@@ -66,6 +67,13 @@ func (c UserRepository) GetOneUser(Id string) (userModel dtos.GetUserResponse, e
 func (c UserRepository) GetOneUserWithEmail(Email string) (user models.User, err error) {
 	return user, c.db.DB.Model(&user).
 		Where("email = ?", Email).
+		First(&user).
+		Error
+}
+
+func (c UserRepository) GetOneUserWithUsername(username string) (user models.User, err error) {
+	return user, c.db.DB.Model(&user).
+		Where("username = ?", username).
 		First(&user).
 		Error
 }
