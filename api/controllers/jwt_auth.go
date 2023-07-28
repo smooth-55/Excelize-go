@@ -6,10 +6,12 @@ import (
 	"boilerplate-api/dtos"
 	"boilerplate-api/errors"
 	"boilerplate-api/infrastructure"
+	"boilerplate-api/models"
 	"boilerplate-api/responses"
 	"boilerplate-api/utils"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -63,10 +65,22 @@ func (cc JwtAuthController) LoginUserWithJWT(c *gin.Context) {
 	}
 
 	// Check if the user exists with provided email address
-	user, err := cc.userService.GetOneUserWithEmail(reqData.Email)
-	if err != nil {
-		responses.ErrorJSON(c, http.StatusBadRequest, "Invalid user credentials1")
-		return
+	var user models.User
+	if strings.Contains(reqData.EmailOrUsername, "@") {
+		userWithEmail, err := cc.userService.GetOneUserWithEmail(reqData.EmailOrUsername)
+		if err != nil {
+			responses.ErrorJSON(c, http.StatusBadRequest, "Invalid user credentials")
+			return
+		}
+		user = userWithEmail
+	} else {
+		userWithUsername, err := cc.userService.GetOneUserWithUsername(reqData.EmailOrUsername)
+		if err != nil {
+			responses.ErrorJSON(c, http.StatusBadRequest, "Invalid user credentials")
+			return
+		}
+		user = userWithUsername
+
 	}
 
 	// Check if the password is correct
