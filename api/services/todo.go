@@ -3,6 +3,8 @@ package services
 import (
 	"boilerplate-api/api/repository"
 	"boilerplate-api/models"
+
+	"gorm.io/gorm"
 )
 
 // TodoService struct
@@ -17,9 +19,19 @@ func NewTodoService(repository repository.TodoRepository) TodoService {
 	}
 }
 
+func (c TodoService) WithTrx(trxHandle *gorm.DB) TodoService {
+	c.repository = c.repository.WithTrx(trxHandle)
+	return c
+}
+
 // CreateTodo call to create the Todo
 func (c TodoService) CreateTodo(todo models.Todo) (models.Todo, error) {
 	return c.repository.Create(todo)
+}
+
+// CreateTodo call to create the Todo
+func (c TodoService) BulkCreateTodo(todo []*models.Todo) error {
+	return c.repository.BulkCreateTodo(todo)
 }
 
 // GetAllTodo call to create the Todo
