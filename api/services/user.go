@@ -38,7 +38,7 @@ func (c UserService) GetAllUsers(pagination paginations.UserPagination) ([]dtos.
 }
 
 // GetOneUser one user
-func (c UserService) GetOneUser(Id string) (dtos.GetUserResponse, error) {
+func (c UserService) GetOneUser(Id string) (dtos.GetUserResponse, map[string]interface{}, error) {
 	return c.repository.GetOneUser(Id)
 }
 
@@ -55,4 +55,9 @@ func (c UserService) GetOneUserWithUsername(username string) (models.User, error
 // GetOneUserWithPhone Get one user with phone
 func (c UserService) GetOneUserWithPhone(Phone string) (models.User, error) {
 	return c.repository.GetOneUserWithPhone(Phone)
+}
+
+// FollowUser -> Follow user
+func (c UserService) FollowUser(obj models.FollowUser) error {
+	return c.repository.FollowUser(obj)
 }
