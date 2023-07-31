@@ -7,6 +7,7 @@ import (
 	"boilerplate-api/dtos"
 	"boilerplate-api/errors"
 	"boilerplate-api/infrastructure"
+	"boilerplate-api/models"
 	"boilerplate-api/paginations"
 	"boilerplate-api/responses"
 	"fmt"
@@ -130,13 +131,47 @@ func (cc UserController) GetAllUsers(c *gin.Context) {
 func (cc UserController) GetUserProfile(c *gin.Context) {
 	userID := fmt.Sprintf("%v", c.MustGet(constants.UserID))
 
-	user, err := cc.userService.GetOneUser(userID)
+	user, followFollowing, err := cc.userService.GetOneUser(userID)
 	if err != nil {
 		cc.logger.Zap.Error("Error finding user profile", err.Error())
 		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
 		responses.HandleError(c, err)
 		return
 	}
+	resp := make(map[string]interface{})
+	resp["user"] = user
+	resp["data"] = followFollowing
+	responses.JSON(c, http.StatusOK, resp)
+}
 
+func (cc UserController) FollowUser(c *gin.Context) {
+	trx := c.MustGet(constants.DBTransaction).(*gorm.DB)
+	loggedInUser := fmt.Sprintf("%v", c.MustGet(constants.UserID))
+	reqData := dtos.FollowUser{}
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		cc.logger.Zap.Error("Error [CreateUser] (ShouldBindJson) : ", err)
+		err := errors.BadRequest.Wrap(err, "Failed to bind user data")
+		responses.HandleError(c, err)
+		return
+	}
+	user, _, err := cc.userService.GetOneUser(loggedInUser)
+	if err != nil {
+		cc.logger.Zap.Error("Error finding user profile", err.Error())
+		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
+		responses.HandleError(c, err)
+		return
+	}
+	follow := models.FollowUser{}
+	follow.UserId = user.ID
+	follow.FollowedUserId = reqData.FollowUserId
+	if user.IsPrivate {
+		follow.IsApproved = true
+	}
+	if err := cc.userService.WithTrx(trx).FollowUser(follow); err != nil {
+		cc.logger.Zap.Error("Error finding user profile", err.Error())
+		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
+		responses.HandleError(c, err)
+		return
+	}
 	responses.JSON(c, http.StatusOK, user)
 }
