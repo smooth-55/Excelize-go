@@ -38,7 +38,7 @@ func (c UserService) GetAllUsers(pagination paginations.UserPagination) ([]dtos.
 }
 
 // GetOneUser one user
-func (c UserService) GetOneUser(Id string) (dtos.GetUserResponse, map[string]interface{}, error) {
+func (c UserService) GetOneUser(Id int64) (dtos.GetUserResponse, map[string]interface{}, error) {
 	return c.repository.GetOneUser(Id)
 }
 
@@ -60,4 +60,14 @@ func (c UserService) GetOneUserWithPhone(Phone string) (models.User, error) {
 // FollowUser -> Follow user
 func (c UserService) FollowUser(obj models.FollowUser) error {
 	return c.repository.FollowUser(obj)
+}
+
+// FollowSuggestions
+func (c UserService) FollowSuggestions(userId int64) ([]dtos.FollowSuggestions, error) {
+	return c.repository.FollowSuggestions(userId)
+}
+
+// GetTwoWayFollowers -> This will return users only if both are following each other
+func (c UserService) GetTwoWayFollowers(userId int64) ([]dtos.FollowSuggestions, error) {
+	return c.repository.GetTwoWayFollowers(userId)
 }
