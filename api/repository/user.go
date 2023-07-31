@@ -56,12 +56,34 @@ func (c UserRepository) GetAllUsers(pagination paginations.UserPagination) (user
 		Error
 }
 
-func (c UserRepository) GetOneUser(Id string) (userModel dtos.GetUserResponse, err error) {
-	return userModel, c.db.DB.
+func (c UserRepository) GetOneUser(Id string) (dtos.GetUserResponse, map[string]interface{}, error) {
+
+	followers := []*models.FollowUser{}
+	following := []*models.FollowUser{}
+	userModel := dtos.GetUserResponse{}
+	resp := make(map[string]interface{})
+
+	err := c.db.DB.
 		Model(&userModel).
 		Where("id = ?", Id).
 		First(&userModel).
 		Error
+
+	c.db.DB.Model(&models.FollowUser{}).
+		Where("user_id = ? AND is_approved = 1", Id).
+		Find(&followers)
+
+	c.db.DB.Model(&models.FollowUser{}).
+		Where("followed_user_id = ? AND is_approved = 1", Id).
+		Find(&following)
+
+	resp["followers"] = followers
+	resp["following"] = following
+
+	if err != nil {
+		return userModel, resp, err
+	}
+	return userModel, resp, err
 }
 
 func (c UserRepository) GetOneUserWithEmail(Email string) (user models.User, err error) {
@@ -83,4 +105,8 @@ func (c UserRepository) GetOneUserWithPhone(Phone string) (user models.User, err
 		First(&user, "phone = ?", Phone).
 		Error
 
+}
+
+func (c UserRepository) FollowUser(obj models.FollowUser) error {
+	return c.db.DB.Create(&obj).Error
 }
