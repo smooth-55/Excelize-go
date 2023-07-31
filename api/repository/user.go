@@ -56,26 +56,30 @@ func (c UserRepository) GetAllUsers(pagination paginations.UserPagination) (user
 		Error
 }
 
-func (c UserRepository) GetOneUser(Id string) (dtos.GetUserResponse, map[string]interface{}, error) {
+func (c UserRepository) GetOneUser(Id int64) (dtos.GetUserResponse, map[string]interface{}, error) {
 
-	followers := []*models.FollowUser{}
-	following := []*models.FollowUser{}
+	followers := []*dtos.GetUserResponse{}
+	following := []*dtos.GetUserResponse{}
 	userModel := dtos.GetUserResponse{}
 	resp := make(map[string]interface{})
 
 	err := c.db.DB.
-		Model(&userModel).
+		Model(&models.User{}).
 		Where("id = ?", Id).
 		First(&userModel).
 		Error
 
 	c.db.DB.Model(&models.FollowUser{}).
-		Where("user_id = ? AND is_approved = 1", Id).
-		Find(&followers)
+		Select("users.*").
+		Joins("JOIN users on follow_user.followed_to_id = users.Id").
+		Where("followed_by_id = ? AND is_approved = 1", Id).
+		Find(&following)
 
 	c.db.DB.Model(&models.FollowUser{}).
-		Where("followed_user_id = ? AND is_approved = 1", Id).
-		Find(&following)
+		Select("users.*").
+		Joins("JOIN users on follow_user.followed_by_id = users.Id").
+		Where("followed_to_id = ? AND is_approved = 1", Id).
+		Find(&followers)
 
 	resp["followers"] = followers
 	resp["following"] = following
@@ -109,4 +113,38 @@ func (c UserRepository) GetOneUserWithPhone(Phone string) (user models.User, err
 
 func (c UserRepository) FollowUser(obj models.FollowUser) error {
 	return c.db.DB.Create(&obj).Error
+}
+
+func (c UserRepository) FollowSuggestions(userId int64) ([]dtos.FollowSuggestions, error) {
+	obj := []dtos.FollowSuggestions{}
+	query := c.db.DB.Model(&models.User{}).
+		Select(`
+		users.id AS Id,
+		users.username AS Username,
+		users.full_name AS FullName,
+		users.email AS Email,
+		CASE WHEN follow_user.followed_to_id = ? THEN 1 ELSE 0 END AS IsFollowed
+		`, userId).
+		Joins("LEFT JOIN follow_user on users.id = follow_user.followed_by_id").
+		Where("users.id NOT IN (select followed_to_id from follow_user where followed_by_id = ?) AND users.id != ?", userId, userId).
+		Find(&obj)
+	return obj, query.Error
+}
+
+func (c UserRepository) GetTwoWayFollowers(userId int64) ([]dtos.FollowSuggestions, error) {
+	obj := []dtos.FollowSuggestions{}
+	query := c.db.DB.Model(&models.FollowUser{}).
+		Select(`
+		follow_user.followed_to_id as Id, 
+		usr.username as Username,
+		usr.full_name as FullName,
+		usr.email as Email,
+		CASE WHEN usr.Id IS NOT NULL THEN 1 ELSE 0 END AS IsFollowed
+		`).
+		Joins("JOIN follow_user t2 ON follow_user.followed_to_id = t2.followed_by_id").
+		Joins("JOIN users as usr on follow_user.followed_to_id = usr.id").
+		Where("follow_user.followed_by_id <> t2.followed_by_id AND follow_user.followed_by_id = ?", userId).
+		Group("usr.username").
+		Find(&obj)
+	return obj, query.Error
 }
