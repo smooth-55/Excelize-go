@@ -46,6 +46,7 @@ func (i UserRoutes) Setup() {
 	{
 		users.GET("", i.userController.GetAllUsers)
 		users.POST("", i.trxMiddleware.DBTransactionHandle(), i.userController.CreateUser)
+		users.POST("/follow-user", i.trxMiddleware.DBTransactionHandle(), i.userController.FollowUser)
 	}
 	i.router.Gin.GET("/profile", i.jwtMiddleware.Handle(), i.userController.GetUserProfile)
 }
