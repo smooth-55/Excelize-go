@@ -12,6 +12,7 @@ import (
 	"boilerplate-api/responses"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -129,9 +130,9 @@ func (cc UserController) GetAllUsers(c *gin.Context) {
 // @Failure      		500 {object} responses.Error
 // @Router				/profile [get]
 func (cc UserController) GetUserProfile(c *gin.Context) {
-	userID := fmt.Sprintf("%v", c.MustGet(constants.UserID))
+	userId, _ := strconv.ParseInt(fmt.Sprintf("%v", c.MustGet(constants.UserID)), 10, 64)
 
-	user, followFollowing, err := cc.userService.GetOneUser(userID)
+	user, followFollowing, err := cc.userService.GetOneUser(userId)
 	if err != nil {
 		cc.logger.Zap.Error("Error finding user profile", err.Error())
 		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
@@ -145,8 +146,10 @@ func (cc UserController) GetUserProfile(c *gin.Context) {
 }
 
 func (cc UserController) FollowUser(c *gin.Context) {
+	fmt.Println("------->>>>iam here")
 	trx := c.MustGet(constants.DBTransaction).(*gorm.DB)
-	loggedInUser := fmt.Sprintf("%v", c.MustGet(constants.UserID))
+
+	userId, _ := strconv.ParseInt(fmt.Sprintf("%v", c.MustGet(constants.UserID)), 10, 64)
 	reqData := dtos.FollowUser{}
 	if err := c.ShouldBindJSON(&reqData); err != nil {
 		cc.logger.Zap.Error("Error [CreateUser] (ShouldBindJson) : ", err)
@@ -154,16 +157,28 @@ func (cc UserController) FollowUser(c *gin.Context) {
 		responses.HandleError(c, err)
 		return
 	}
-	user, _, err := cc.userService.GetOneUser(loggedInUser)
+	if userId == reqData.FollowUserId {
+		cc.logger.Zap.Error("You can't follow yourself")
+		responses.ErrorJSON(c, http.StatusBadRequest, "You can't follow yourself")
+		return
+	}
+	user, _, err := cc.userService.GetOneUser(userId)
 	if err != nil {
 		cc.logger.Zap.Error("Error finding user profile", err.Error())
 		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
 		responses.HandleError(c, err)
 		return
 	}
+	if _, _, err := cc.userService.GetOneUser(reqData.FollowUserId); err != nil {
+		cc.logger.Zap.Error("Error finding user profile", err.Error())
+		erMessage := fmt.Sprintf("User with id: %v, does'nt exists", reqData.FollowUserId)
+		err := errors.InternalError.Wrap(err, erMessage)
+		responses.HandleError(c, err)
+		return
+	}
 	follow := models.FollowUser{}
-	follow.UserId = user.ID
-	follow.FollowedUserId = reqData.FollowUserId
+	follow.FollowedById = user.ID
+	follow.FollowedToId = reqData.FollowUserId
 	if user.IsPrivate {
 		follow.IsApproved = true
 	}
@@ -174,4 +189,40 @@ func (cc UserController) FollowUser(c *gin.Context) {
 		return
 	}
 	responses.JSON(c, http.StatusOK, user)
+}
+
+func (cc UserController) FollowSuggestions(c *gin.Context) {
+	userId, _ := strconv.ParseInt(fmt.Sprintf("%v", c.MustGet(constants.UserID)), 10, 64)
+	if _, _, err := cc.userService.GetOneUser(userId); err != nil {
+		cc.logger.Zap.Error("Error finding user profile", err.Error())
+		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
+		responses.HandleError(c, err)
+		return
+	}
+	suggestedUsers, err := cc.userService.FollowSuggestions(userId)
+	if err != nil {
+		cc.logger.Zap.Error("Error finding follow suggestion", err.Error())
+		err := errors.InternalError.Wrap(err, "Failed to get follwer suggestions")
+		responses.HandleError(c, err)
+		return
+	}
+	responses.JSON(c, http.StatusOK, suggestedUsers)
+}
+
+func (cc UserController) GetTwoWayFollowers(c *gin.Context) {
+	userId, _ := strconv.ParseInt(fmt.Sprintf("%v", c.MustGet(constants.UserID)), 10, 64)
+	if _, _, err := cc.userService.GetOneUser(userId); err != nil {
+		cc.logger.Zap.Error("Error finding user profile", err.Error())
+		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
+		responses.HandleError(c, err)
+		return
+	}
+	suggestedUsers, err := cc.userService.GetTwoWayFollowers(userId)
+	if err != nil {
+		cc.logger.Zap.Error("Error finding follow suggestion", err.Error())
+		err := errors.InternalError.Wrap(err, "Failed to get follwer suggestions")
+		responses.HandleError(c, err)
+		return
+	}
+	responses.JSON(c, http.StatusOK, suggestedUsers)
 }
