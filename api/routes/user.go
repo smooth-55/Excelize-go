@@ -42,11 +42,14 @@ func NewUserRoutes(
 // Setup user routes
 func (i UserRoutes) Setup() {
 	i.logger.Zap.Info(" Setting up user routes")
-	users := i.router.Gin.Group("/users").Use(i.rateLimitMiddleware.HandleRateLimit(constants.BasicRateLimit, constants.BasicPeriod))
+	userAuth := i.router.Gin.Group("/users").Use(i.rateLimitMiddleware.HandleRateLimit(constants.BasicRateLimit, constants.BasicPeriod)).Use(i.jwtMiddleware.Handle())
+	userNoAuth := i.router.Gin.Group("/users").Use(i.rateLimitMiddleware.HandleRateLimit(constants.BasicRateLimit, constants.BasicPeriod))
 	{
-		users.GET("", i.userController.GetAllUsers)
-		users.POST("", i.trxMiddleware.DBTransactionHandle(), i.userController.CreateUser)
-		users.POST("/follow-user", i.trxMiddleware.DBTransactionHandle(), i.userController.FollowUser)
+		userAuth.GET("", i.userController.GetAllUsers)
+		userNoAuth.POST("", i.trxMiddleware.DBTransactionHandle(), i.userController.CreateUser)
+		userAuth.POST("/follow-user", i.trxMiddleware.DBTransactionHandle(), i.userController.FollowUser)
+		userAuth.GET("/follow-suggestions", i.userController.FollowSuggestions)
+		userAuth.GET("/two-way-follow", i.userController.GetTwoWayFollowers)
 	}
-	i.router.Gin.GET("/profile", i.jwtMiddleware.Handle(), i.userController.GetUserProfile)
+	i.router.Gin.GET("/profile", i.jwtMiddleware.Handle(), i.userController.GetUserProfile).Use(i.jwtMiddleware.Handle())
 }
