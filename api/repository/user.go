@@ -7,6 +7,7 @@ import (
 	"boilerplate-api/paginations"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // UserRepository database structure
@@ -38,7 +39,10 @@ func (c UserRepository) Create(User models.User) error {
 	return c.db.DB.Create(&User).Error
 }
 func (c UserRepository) BulkCreateUser(User []*models.User) error {
-	return c.db.DB.Create(&User).Error
+	return c.db.DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "uuid"}},
+		UpdateAll: true,
+	}).Create(&User).Error
 }
 
 // GetAllUsers Get All users

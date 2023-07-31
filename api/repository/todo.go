@@ -5,6 +5,7 @@ import (
 	"boilerplate-api/models"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // TodoRepository database structure
@@ -38,7 +39,10 @@ func (c TodoRepository) Create(Todo models.Todo) (models.Todo, error) {
 
 // Create Todo
 func (c TodoRepository) BulkCreateTodo(Todo []*models.Todo) error {
-	return c.db.DB.Create(&Todo).Error
+	return c.db.DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "uuid"}},
+		UpdateAll: true,
+	}).Create(&Todo).Error
 }
 
 // Create Todo
