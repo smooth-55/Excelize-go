@@ -24,3 +24,7 @@ type GetUserResponse struct {
 	models.User
 	Password string
 }
+
+type FollowUser struct {
+	FollowUserId int64 `json:"follow_user_id" binding:"required"`
+}
