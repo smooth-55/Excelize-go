@@ -8,12 +8,13 @@ import (
 
 type User struct {
 	Base
-	Email    string `gorm:"email" json:"email" validate:"required,email"`
-	FullName string `gorm:"full_name" json:"full_name" validate:"required"`
-	Phone    string `gorm:"phone" json:"phone" validate:"required,phone"`
-	Gender   string `gorm:"gender" json:"gender"`
-	Password string `gorm:"password" json:"password" validate:"required"`
-	Username string `gorm:"username" json:"username" validate:"required"`
+	Email     string `gorm:"column:email" json:"email" validate:"required,email"`
+	FullName  string `gorm:"column:full_name" json:"full_name" validate:"required"`
+	Phone     string `gorm:"column:phone" json:"phone" validate:"required,phone"`
+	Gender    string `gorm:"column:gender" json:"gender"`
+	Password  string `gorm:"column:password" json:"-"`
+	Username  string `gorm:"column:username" json:"username" validate:"required"`
+	IsPrivate bool   `gorm:"column:is_private;default:0" json:"is_private"`
 }
 
 // TableName gives table name of model
@@ -24,12 +25,13 @@ func (u *User) TableName() string {
 // ToMap convert User to map
 func (u *User) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"id":        u.ID,
-		"email":     u.Email,
-		"full_name": u.FullName,
-		"phone":     u.Phone,
-		"username":  u.Username,
-		"gender":    u.Gender,
+		"id":         u.ID,
+		"email":      u.Email,
+		"full_name":  u.FullName,
+		"phone":      u.Phone,
+		"username":   u.Username,
+		"gender":     u.Gender,
+		"is_private": u.IsPrivate,
 	}
 }
 
@@ -43,4 +45,16 @@ func (u *User) BeforeCreate(db *gorm.DB) error {
 		return err
 	}
 	return nil
+}
+
+type FollowUser struct {
+	Base
+	UserId         int64 `gorm:"column:user_id" json:"user_id" binding:"-"`
+	FollowedUserId int64 `gorm:"column:followed_user_id" json:"followed_user_id"`
+	User           User  `json:"followed_user"`
+	IsApproved     bool  `gorm:"column:is_approved;default:1" json:"is_approved"`
+}
+
+func (u FollowUser) TableName() string {
+	return "follow_user"
 }
