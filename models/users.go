@@ -10,7 +10,7 @@ type User struct {
 	Base
 	Email     string `gorm:"column:email" json:"email" validate:"required,email"`
 	FullName  string `gorm:"column:full_name" json:"full_name" validate:"required"`
-	Phone     string `gorm:"column:phone" json:"phone" validate:"required,phone"`
+	Phone     string `gorm:"column:phone;default:null" json:"phone" validate:"required,phone"`
 	Gender    string `gorm:"column:gender" json:"gender"`
 	Password  string `gorm:"column:password" json:"-"`
 	Username  string `gorm:"column:username" json:"username" validate:"required"`
@@ -49,10 +49,9 @@ func (u *User) BeforeCreate(db *gorm.DB) error {
 
 type FollowUser struct {
 	Base
-	UserId         int64 `gorm:"column:user_id" json:"user_id" binding:"-"`
-	FollowedUserId int64 `gorm:"column:followed_user_id" json:"followed_user_id"`
-	User           User  `json:"followed_user"`
-	IsApproved     bool  `gorm:"column:is_approved;default:1" json:"is_approved"`
+	FollowedById int64 `gorm:"column:followed_by_id" json:"followed_by_id" binding:"-"`
+	FollowedToId int64 `gorm:"column:followed_to_id" json:"followed_to_id"`
+	IsApproved   bool  `gorm:"column:is_approved;default:1" json:"is_approved"`
 }
 
 func (u FollowUser) TableName() string {
