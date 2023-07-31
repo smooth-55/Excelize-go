@@ -90,15 +90,19 @@ func (cc BackupController) RestoreData(ctx *gin.Context) {
 		item.CreatedAt = time.Now()
 		item.UpdatedAt = time.Now()
 	}
-	if err := cc.TodoService.WithTrx(trx).BulkCreateTodo(data.Todo); err != nil {
-		responses.ErrorJSON(ctx, http.StatusInternalServerError, err)
-		return
+	if len(data.Todo) > 0 {
+		if err := cc.TodoService.WithTrx(trx).BulkCreateTodo(data.Todo); err != nil {
+			responses.ErrorJSON(ctx, http.StatusInternalServerError, err)
+			return
+		}
+	}
+	if len(data.Users) > 0 {
+		if err := cc.UserService.WithTrx(trx).BulkCreateUser(data.Users); err != nil {
+			responses.ErrorJSON(ctx, http.StatusInternalServerError, err)
+			return
+		}
 	}
 
-	if err := cc.UserService.WithTrx(trx).BulkCreateUser(data.Users); err != nil {
-		responses.ErrorJSON(ctx, http.StatusInternalServerError, err)
-		return
-	}
 	defer jsonFile.Close()
 	responses.JSON(ctx, http.StatusOK, "Data imported successfully")
 }
