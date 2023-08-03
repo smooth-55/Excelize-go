@@ -130,7 +130,7 @@ func (cc UserController) GetAllUsers(c *gin.Context) {
 // @Failure      		500 {object} responses.Error
 // @Router				/profile [get]
 func (cc UserController) GetUserProfile(c *gin.Context) {
-	userId, _ := strconv.ParseInt(fmt.Sprintf("%v", c.MustGet(constants.UserID)), 10, 64)
+	userId, _ := strconv.ParseInt(c.MustGet(constants.UserID).(string), 10, 64)
 
 	user, followFollowing, err := cc.userService.GetOneUser(userId)
 	if err != nil {
@@ -149,7 +149,7 @@ func (cc UserController) FollowUser(c *gin.Context) {
 	fmt.Println("------->>>>iam here")
 	trx := c.MustGet(constants.DBTransaction).(*gorm.DB)
 
-	userId, _ := strconv.ParseInt(fmt.Sprintf("%v", c.MustGet(constants.UserID)), 10, 64)
+	userId, _ := strconv.ParseInt(c.MustGet(constants.UserID).(string), 10, 64)
 	reqData := dtos.FollowUser{}
 	if err := c.ShouldBindJSON(&reqData); err != nil {
 		cc.logger.Zap.Error("Error [CreateUser] (ShouldBindJson) : ", err)
@@ -192,7 +192,7 @@ func (cc UserController) FollowUser(c *gin.Context) {
 }
 
 func (cc UserController) FollowSuggestions(c *gin.Context) {
-	userId, _ := strconv.ParseInt(fmt.Sprintf("%v", c.MustGet(constants.UserID)), 10, 64)
+	userId, _ := strconv.ParseInt(c.MustGet(constants.UserID).(string), 10, 64)
 	if _, _, err := cc.userService.GetOneUser(userId); err != nil {
 		cc.logger.Zap.Error("Error finding user profile", err.Error())
 		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
@@ -210,7 +210,7 @@ func (cc UserController) FollowSuggestions(c *gin.Context) {
 }
 
 func (cc UserController) GetTwoWayFollowers(c *gin.Context) {
-	userId, _ := strconv.ParseInt(fmt.Sprintf("%v", c.MustGet(constants.UserID)), 10, 64)
+	userId, _ := strconv.ParseInt(c.MustGet(constants.UserID).(string), 10, 64)
 	if _, _, err := cc.userService.GetOneUser(userId); err != nil {
 		cc.logger.Zap.Error("Error finding user profile", err.Error())
 		err := errors.InternalError.Wrap(err, "Failed to get users profile data")
