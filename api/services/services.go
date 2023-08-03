@@ -11,4 +11,6 @@ var Module = fx.Options(
 	fx.Provide(NewGmailService),
 	fx.Provide(NewS3BucketService),
 	fx.Provide(NewJWTAuthService),
+	fx.Provide(NewMessageService),
+	fx.Provide(NewRoomService),
 )

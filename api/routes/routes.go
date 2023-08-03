@@ -1,6 +1,8 @@
 package routes
 
-import "go.uber.org/fx"
+import (
+	"go.uber.org/fx"
+)
 
 // Module exports dependency to container
 var Module = fx.Options(
@@ -9,6 +11,7 @@ var Module = fx.Options(
 	fx.Provide(NewDocsRoutes),
 	fx.Provide(NewJwtAuthRoutes),
 	fx.Provide(NewUserRoutes),
+	fx.Provide(NewMessageRoutes),
 )
 
 // Routes contains multiple routes
@@ -25,12 +28,14 @@ func NewRoutes(
 	userRoutes UserRoutes,
 	jwtAuthRoutes JwtAuthRoutes,
 	docsRoutes DocsRoutes,
+	messageRoutes MessageRoutes,
 ) Routes {
 	return Routes{
 		utilityRoutes,
 		jwtAuthRoutes,
 		userRoutes,
 		docsRoutes,
+		messageRoutes,
 	}
 }
 
