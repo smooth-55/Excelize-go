@@ -38,7 +38,7 @@ func (c UserService) GetAllUsers(pagination paginations.UserPagination) ([]dtos.
 }
 
 // GetOneUser one user
-func (c UserService) GetOneUser(Id int64) (dtos.GetUserResponse, map[string]interface{}, error) {
+func (c UserService) GetOneUser(Id int64) (models.User, map[string]interface{}, error) {
 	return c.repository.GetOneUser(Id)
 }
 
