@@ -56,11 +56,10 @@ func (c UserRepository) GetAllUsers(pagination paginations.UserPagination) (user
 		Error
 }
 
-func (c UserRepository) GetOneUser(Id int64) (dtos.GetUserResponse, map[string]interface{}, error) {
+func (c UserRepository) GetOneUser(Id int64) (models.User, map[string]interface{}, error) {
 
-	followers := []*dtos.GetUserResponse{}
-	following := []*dtos.GetUserResponse{}
-	userModel := dtos.GetUserResponse{}
+	var followers, following []*dtos.GetUserResponse
+	var userModel models.User
 	resp := make(map[string]interface{})
 
 	err := c.db.DB.
@@ -127,6 +126,8 @@ func (c UserRepository) FollowSuggestions(userId int64) ([]dtos.FollowSuggestion
 		`, userId).
 		Joins("LEFT JOIN follow_user on users.id = follow_user.followed_by_id").
 		Where("users.id NOT IN (select followed_to_id from follow_user where followed_by_id = ?) AND users.id != ?", userId, userId).
+		Order("users.created_at DESC").
+		Limit(5).
 		Find(&obj)
 	return obj, query.Error
 }
