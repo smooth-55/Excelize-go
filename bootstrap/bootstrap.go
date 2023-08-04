@@ -7,6 +7,7 @@ import (
 	"boilerplate-api/api/routes"
 	"boilerplate-api/api/services"
 	"boilerplate-api/api/validators"
+	"boilerplate-api/api/wbs"
 	"boilerplate-api/cli"
 	"boilerplate-api/docs"
 	"boilerplate-api/infrastructure"
@@ -28,6 +29,7 @@ var Module = fx.Options(
 	infrastructure.Module,
 	cli.Module,
 	seeds.Module,
+	wbs.Module,
 	fx.Invoke(bootstrap),
 )
 
@@ -42,6 +44,9 @@ func bootstrap(
 	cliApp cli.Application,
 	migrations infrastructure.Migrations,
 	seeds seeds.Seeds,
+	wsRoute wbs.WSRoutes,
+	hub *wbs.Hub,
+
 ) {
 
 	appStop := func(context.Context) error {
@@ -84,14 +89,24 @@ func bootstrap(
 				}
 				middlewares.Setup()
 				routes.Setup()
+				wsRoute.Setup()
 				logger.Zap.Info("🌱 seeding data...")
 				seeds.Run()
+				// hub := wbs.NewHub()
 				if env.ServerPort == "" {
 					_ = handler.Gin.Run()
 				} else {
 					_ = handler.Gin.Run(":" + env.ServerPort)
 				}
 			}()
+			// hub := wbs.NewHub()
+			// go hub.Run()
+
+			go func() {
+				logger.Zap.Info("Running Chat Websocket server...")
+				hub.Run()
+			}()
+
 			return nil
 		},
 		OnStop: appStop,
