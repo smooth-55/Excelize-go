@@ -37,39 +37,43 @@ func NewJWTAuthMiddleWare(
 func (m JWTAuthMiddleWare) Handle() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//Getting token from header
-		tokenString, err := m.jwtService.GetTokenFromHeader(c)
-		if err != nil {
-			m.logger.Zap.Error("Error getting token from header: ", err.Error())
-			err = errors.Unauthorized.Wrap(err, "Error getting token from header")
-			responses.HandleError(c, err)
-			c.Abort()
-			return
-		}
-		// Parsing and Verifying token
-		parsedToken, parseErr := m.jwtService.ParseAndVerifyToken(tokenString, m.env.JwtAccessSecret)
-		if parseErr != nil {
-			m.logger.Zap.Error("Error parsing token: ", parseErr.Error())
-			err = errors.Unauthorized.Wrap(parseErr, "Failed to parse and verify token")
-			responses.HandleError(c, err)
-			c.Abort()
-			return
-		}
-		// Retrieve claims
-		claims, claimsError := m.jwtService.RetrieveClaims(parsedToken)
-		if claimsError != nil {
-			m.logger.Zap.Error("Error retrieving claims: ", claimsError.Error())
-			err = errors.Unauthorized.Wrap(claimsError, "Failed to retrieve claims from token")
-			responses.HandleError(c, err)
-			c.Abort()
-			return
-		}
-		// ser user to the scope
-		sentry.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetUser(sentry.User{ID: claims.ID})
-		})
-		// Can set anything in the request context and passes the request to the next handler.
-		c.Set(constants.UserID, claims.ID)
-		c.Next()
+		if c.GetHeader("Connection") != "Upgrade" {
+			tokenString, err := m.jwtService.GetTokenFromHeader(c)
+			if err != nil {
+				m.logger.Zap.Error("Error getting token from header: ", err.Error())
+				err = errors.Unauthorized.Wrap(err, "Error getting token from header")
+				responses.HandleError(c, err)
+				c.Abort()
+				return
+			}
+			// Parsing and Verifying token
+			parsedToken, parseErr := m.jwtService.ParseAndVerifyToken(tokenString, m.env.JwtAccessSecret)
+			if parseErr != nil {
+				m.logger.Zap.Error("Error parsing token: ", parseErr.Error())
+				err = errors.Unauthorized.Wrap(parseErr, "Failed to parse and verify token")
+				responses.HandleError(c, err)
+				c.Abort()
+				return
+			}
+			// Retrieve claims
+			claims, claimsError := m.jwtService.RetrieveClaims(parsedToken)
+			if claimsError != nil {
+				m.logger.Zap.Error("Error retrieving claims: ", claimsError.Error())
+				err = errors.Unauthorized.Wrap(claimsError, "Failed to retrieve claims from token")
+				responses.HandleError(c, err)
+				c.Abort()
+				return
+			}
+			// ser user to the scope
+			sentry.ConfigureScope(func(scope *sentry.Scope) {
+				scope.SetUser(sentry.User{ID: claims.ID})
+			})
+			// Can set anything in the request context and passes the request to the next handler.
+			c.Set(constants.UserID, claims.ID)
+			c.Next()
 
+		} else {
+			c.Next()
+		}
 	}
 }
