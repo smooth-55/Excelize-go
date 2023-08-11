@@ -2,7 +2,6 @@ package wbs
 
 import (
 	"boilerplate-api/api/middlewares"
-	"boilerplate-api/constants"
 	"boilerplate-api/infrastructure"
 )
 
@@ -38,9 +37,7 @@ func NewServerRoutes(
 // Setup user routes
 func (i ServerRoutes) Setup() {
 	i.logger.Zap.Info(" Setting up user routes")
-	ws := i.router.Gin.Group("/ws").Use(i.rateLimitMiddleware.
-		HandleRateLimit(constants.BasicRateLimit, constants.BasicPeriod),
-	) //.Use(i.jwtMiddleware.Handle())
+	ws := i.router.Gin.Group("/ws")
 	{
 		// ws.POST("/create-room", i.handler.CreateRoom)
 		ws.GET("/join-room/:roomId", i.handler.JoinRoom)
