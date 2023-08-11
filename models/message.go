@@ -29,7 +29,9 @@ func (c Messages) TableName() string {
 type RoomUsers struct {
 	Base
 	RoomId int64 `gorm:"column:room_id" json:"room_id" binding:"required"`
+	Room   Rooms `gorm:"foreignKey:room_id" json:"room"`
 	UserId int64 `gorm:"column:user_id" json:"user_id" binding:"required"`
+	User   User  `gorm:"foreignKey:user_id" json:"user"`
 }
 
 func (c RoomUsers) TableName() string {
