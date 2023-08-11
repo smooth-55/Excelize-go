@@ -38,6 +38,7 @@ func NewRouter(env Env) Router {
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"PUT", "PATCH", "GET", "POST", "OPTIONS", "DELETE"},
 		AllowHeaders:     []string{"*"},
+		AllowWebSockets:  true,
 		AllowCredentials: true,
 	}))
 
