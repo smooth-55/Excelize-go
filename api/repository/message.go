@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"boilerplate-api/dtos"
 	"boilerplate-api/infrastructure"
 	"boilerplate-api/models"
+
 	"gorm.io/gorm"
 )
 
@@ -31,12 +31,24 @@ func (c MessageRepository) WithTrx(trxHandle *gorm.DB) MessageRepository {
 	return c
 }
 
-func (c MessageRepository) GetMyConversations(userId int64) ([]dtos.AllConversations, int64, error) {
-	var resp []dtos.AllConversations
+func (c MessageRepository) GetMyConversations(userId int64) ([]models.RoomUsers, int64, error) {
+	var resp []models.RoomUsers
 	var count int64
-	query := c.db.DB.Model(&models.Rooms{}).
-		Where("message_from_id = ? OR message_to_id = ?", userId, userId).
+	query := c.db.DB.Model(&models.RoomUsers{}).
+		Preload("Room").
+		Preload("User").
+		Where("user_id = ? ", userId).
 		Find(&resp).
 		Count(&count)
 	return resp, count, query.Error
+}
+
+func (c MessageRepository) GetOneRoomById(roomId int64) (models.Rooms, error) {
+	var resp models.Rooms
+	query := c.db.DB.Model(&models.Rooms{}).
+		Preload("Users").
+		Preload("Users.User").
+		Where("id = ? ", roomId).
+		Find(&resp)
+	return resp, query.Error
 }
