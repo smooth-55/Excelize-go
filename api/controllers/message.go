@@ -7,8 +7,11 @@ import (
 	"boilerplate-api/errors"
 	"boilerplate-api/infrastructure"
 	"boilerplate-api/responses"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type MessageController struct {
@@ -34,20 +37,17 @@ func NewMessageController(
 }
 
 func (cc MessageController) GetMyConversations(c *gin.Context) {
-	userId := c.GetInt64(constants.UserID)
+	_userId := c.MustGet(constants.UserID).(string)
+	userId, _ := strconv.ParseInt(_userId, 10, 64)
+
 	if userId == 0 {
 		cc.logger.Zap.Error("User Id required")
 		err := errors.BadRequest.New("User Id required")
 		responses.HandleError(c, err)
 		return
 	}
-	data, count, err := cc.messageService.GetMyConversations(userId)
-	if err != nil {
-		cc.logger.Zap.Error("Error [CreateUser] [db CreateUser]: User with this email already exists")
-		err := errors.BadRequest.New("User with this email already exists")
-		responses.HandleError(c, err)
-		return
-	}
+	data, count, _ := cc.messageService.GetMyConversations(userId)
+
 	responses.JSONCount(c, http.StatusOK, data, count)
 
 }
