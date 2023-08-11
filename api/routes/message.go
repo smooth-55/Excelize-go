@@ -46,6 +46,6 @@ func (i MessageRoutes) Setup() {
 		).
 		Use(i.jwtMiddleware.Handle())
 	{
-		message.GET("get-all-conversations", i.messageController.GetMyConversations)
+		message.GET("/get-all-conversations", i.messageController.GetMyConversations)
 	}
 }
