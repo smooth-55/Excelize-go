@@ -47,5 +47,6 @@ func (i MessageRoutes) Setup() {
 		Use(i.jwtMiddleware.Handle())
 	{
 		message.GET("/get-all-conversations", i.messageController.GetMyConversations)
+		message.GET("/get-room-cov/:room_id", i.messageController.GetAllMessagesByRoomId)
 	}
 }
