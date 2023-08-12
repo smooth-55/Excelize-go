@@ -7,6 +7,7 @@ import (
 	"boilerplate-api/errors"
 	"boilerplate-api/infrastructure"
 	"boilerplate-api/responses"
+	"fmt"
 	"net/http"
 
 	"strconv"
@@ -49,5 +50,19 @@ func (cc MessageController) GetMyConversations(c *gin.Context) {
 	data, count, _ := cc.messageService.GetMyConversations(userId)
 
 	responses.JSONCount(c, http.StatusOK, data, count)
+
+}
+
+func (cc MessageController) GetAllMessagesByRoomId(c *gin.Context) {
+	roomId := c.Param("room_id")
+	_roomId, _ := strconv.ParseInt(roomId, 10, 64)
+	data, err := cc.messageService.GetAllMessagesByRoomId(_roomId)
+	if err != nil {
+		cc.logger.Zap.Error("Error [GetAllMessagesByRoomId]", err)
+		err := errors.InternalError.New(fmt.Sprintf("Something went wrong [GetAllMessagesByRoomId] %v", err))
+		responses.HandleError(c, err)
+		return
+	}
+	responses.JSON(c, http.StatusOK, data)
 
 }
