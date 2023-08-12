@@ -17,8 +17,9 @@ func (c Rooms) TableName() string {
 
 type Messages struct {
 	Base
-	RoomId    int64  `gorm:"column:message_room_id" json:"message_room_id" binding:"required"`
+	RoomId    int64  `gorm:"column:room_id" json:"room_id" binding:"required"`
 	MessageBy int64  `gorm:"column:message_by" json:"message_by" binding:"required"`
+	User      User   `gorm:"foreignKey:message_by" json:"user"`
 	Message   string `gorm:"column:message" json:"message" binding:"required"`
 }
 
