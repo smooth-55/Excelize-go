@@ -52,3 +52,17 @@ func (c MessageRepository) GetOneRoomById(roomId int64) (models.Rooms, error) {
 		Find(&resp)
 	return resp, query.Error
 }
+
+func (c MessageRepository) CreateMessage(msg models.Messages) error {
+	return c.db.DB.Create(&msg).Error
+}
+
+func (c MessageRepository) GetAllMessagesByRoomId(roomId int64) ([]*models.Messages, error) {
+	var msgs []*models.Messages
+	return msgs, c.db.DB.Model(&models.Messages{}).
+		Preload("User").
+		Where("room_id = ?", roomId).
+		Order("created_at").
+		Find(&msgs).
+		Error
+}
