@@ -31,3 +31,11 @@ func (c MessageService) GetMyConversations(userId int64) ([]models.RoomUsers, in
 func (c MessageService) GetOneRoomById(rommId int64) (models.Rooms, error) {
 	return c.repository.GetOneRoomById(rommId)
 }
+
+func (c MessageService) CreateMessage(msg models.Messages) error {
+	return c.repository.CreateMessage(msg)
+}
+
+func (c MessageService) GetAllMessagesByRoomId(roomId int64) ([]*models.Messages, error) {
+	return c.repository.GetAllMessagesByRoomId(roomId)
+}
